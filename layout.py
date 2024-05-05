@@ -29,7 +29,12 @@ class MainContainer(GridLayout):
         self.actions_input = ActionsInputContainer()
         self.add_widget(self.actions_input)
 
-        self.query = QueryContainer()
+        self.query = QueryContainer(
+            self.adl_takes_input,
+            self.adl_causes_input,
+            self.observation_input,
+            self.actions_input,
+        )
         self.add_widget(self.query)
 
 

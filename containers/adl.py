@@ -2,6 +2,7 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
 
 from containers.input_base import InputContainerBase
+from query_resolution.dto import AdlCausesStatement, AdlTakesStatement
 
 
 class AdlTakesInputContainer(InputContainerBase):
@@ -32,6 +33,15 @@ class AdlTakesInputContainer(InputContainerBase):
         )
         return input_layout
 
+    def get_parsed_entries(self):
+        return [
+            AdlTakesStatement(
+                action=en["input"].children[-1].text,
+                time=int(en["input"].children[-2].text),
+            )
+            for en in self.entry_list
+        ]
+
 
 class AdlCausesInputContainer(InputContainerBase):
 
@@ -52,7 +62,7 @@ class AdlCausesInputContainer(InputContainerBase):
         )
         input_layout.add_widget(
             TextInput(
-                text="t",
+                text="f",
                 multiline=False,
                 size_hint=(0.1, 0.1),
                 background_color=(0.84, 0.85, 0.78, 1),
@@ -69,3 +79,16 @@ class AdlCausesInputContainer(InputContainerBase):
             )
         )
         return input_layout
+
+    def get_parsed_entries(self):
+        return [
+            AdlCausesStatement(
+                action=en["input"].children[-1].text,
+                fluent=en["input"].children[-2].text,
+                condition_fluents=en["input"]
+                .children[-3]
+                .text.strip()
+                .split(","),
+            )
+            for en in self.entry_list
+        ]

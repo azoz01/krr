@@ -22,6 +22,9 @@ class InputContainerBase(RelativeLayout):
     def get_entry_input(self):
         raise NotImplementedError("Not implemented")
 
+    def get_parsed_entries(self):
+        raise NotImplementedError("Not implemented")
+
     def _initialize_layout(self):
         with self.canvas.before:
             self.border_color = (0, 0, 0, 0)

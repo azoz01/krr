@@ -4,6 +4,7 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
 
 from containers.input_base import InputContainerBase
+from query_resolution.dto import ObservationStatement
 
 
 class ObservationsInputContainer(InputContainerBase):
@@ -49,3 +50,13 @@ class ObservationsInputContainer(InputContainerBase):
             )
         )
         return input_layout
+
+    def get_parsed_entries(self):
+        return [
+            ObservationStatement(
+                fluent=en["input"].children[-1].text,
+                time=int(en["input"].children[-2].text),
+                negated=en["input"].children[-3].active,
+            )
+            for en in self.entry_list
+        ]

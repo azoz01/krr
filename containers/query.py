@@ -1,4 +1,3 @@
-import random
 from functools import partial
 
 from kivy.uix.button import Button
@@ -7,10 +6,21 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
 
 from containers.input_base import InputContainerBase
+from query_resolution.algorithms import (
+    resolve_condition_query,
+    resolve_realizable_query,
+)
 
 
 class QueryContainer(RelativeLayout):
-    def __init__(self):
+
+    def __init__(
+        self,
+        adl_takes_input,
+        adl_causes_input,
+        observation_input,
+        actions_input,
+    ):
         super().__init__()
         label = Label(
             text="Queries",
@@ -18,14 +28,31 @@ class QueryContainer(RelativeLayout):
             pos_hint={"x": 0, "y": 0.95},
         )
         self.add_widget(label)
-        self.realizable_query = RealizableQueryBox()
+        self.realizable_query = RealizableQueryBox(
+            adl_takes_input,
+            adl_causes_input,
+            observation_input,
+            actions_input,
+        )
         self.add_widget(self.realizable_query)
-        self.condition_query = ConditionQueryBox()
+        self.condition_query = ConditionQueryBox(
+            adl_takes_input,
+            adl_causes_input,
+            observation_input,
+            actions_input,
+        )
         self.add_widget(self.condition_query)
 
 
 class RealizableQueryBox(RelativeLayout):
-    def __init__(self):
+
+    def __init__(
+        self,
+        adl_takes_input,
+        adl_causes_input,
+        observation_input,
+        actions_input,
+    ):
         super().__init__()
         label = Label(
             text="Is scenario realizable?",
@@ -37,7 +64,6 @@ class RealizableQueryBox(RelativeLayout):
         self.execute_query_button = Button(
             on_release=self._respond_to_query,
             text="Run",
-            # font_size=,
             background_color=(0.84, 0.85, 0.78, 1),
             size_hint=(0.3, 0.05),
             pos_hint={"x": 0.06, "y": 0.85},
@@ -50,8 +76,23 @@ class RealizableQueryBox(RelativeLayout):
         )
         self.add_widget(self.response_label)
 
+        self.adl_takes_input = adl_takes_input
+        self.adl_causes_input = adl_causes_input
+        self.observation_input = observation_input
+        self.actions_input = actions_input
+
     def _respond_to_query(self, *args, **kwargs):
-        if random.random() <= 0.5:
+        adl_takes_statements = self.adl_takes_input.get_parsed_entries()
+        adl_causes_statements = self.adl_causes_input.get_parsed_entries()
+        observation_statements = self.observation_input.get_parsed_entries()
+        actions_input = self.actions_input.get_parsed_entries()
+
+        if resolve_realizable_query(
+            adl_takes_statements,
+            adl_causes_statements,
+            observation_statements,
+            actions_input,
+        ):
             response = "No"
         else:
             response = "Yes"
@@ -59,7 +100,14 @@ class RealizableQueryBox(RelativeLayout):
 
 
 class ConditionQueryBox(RelativeLayout):
-    def __init__(self):
+
+    def __init__(
+        self,
+        adl_takes_input,
+        adl_causes_input,
+        observation_input,
+        actions_input,
+    ):
         super().__init__()
 
         self.entry_height = 0.05
@@ -123,12 +171,17 @@ class ConditionQueryBox(RelativeLayout):
         self.add_widget(self.add_condition_button)
 
         self.new_condition_y_position = 0.55
-        self.condition_list = []
+        self.condition_inputs_list = []
+
+        self.adl_takes_input = adl_takes_input
+        self.adl_causes_input = adl_causes_input
+        self.observation_input = observation_input
+        self.actions_input = actions_input
 
     def _add_condition(self, *args, **kwargs):
         if self.new_condition_y_position < -0.0001:
             return
-        entry_id = len(self.condition_list)
+        entry_id = len(self.condition_inputs_list)
         entry = dict()
         input = TextInput(
             text="f",
@@ -146,29 +199,49 @@ class ConditionQueryBox(RelativeLayout):
             pos_hint={"x": 0.9, "y": self.new_condition_y_position},
         )
         entry.update({"id": entry_id, "input": input, "delete": delete_button})
-        self.condition_list.append(entry)
+        self.condition_inputs_list.append(entry)
         self.add_widget(input)
         self.add_widget(delete_button)
         self.new_condition_y_position -= self.entry_height
 
     def _delete_entry(self, entry, *args, **kwargs):
         entry_id = entry["id"]
-        deleted_entry = self.condition_list.pop(entry_id)
+        deleted_entry = self.condition_inputs_list.pop(entry_id)
         self.remove_widget(deleted_entry["input"])
         self.remove_widget(deleted_entry["delete"])
-        for i in range(entry_id, len(self.condition_list)):
-            entry = self.condition_list[i]
+        for i in range(entry_id, len(self.condition_inputs_list)):
+            entry = self.condition_inputs_list[i]
             entry["id"] -= 1
             entry["input"].pos_hint["y"] += self.entry_height
             entry["delete"].pos_hint["y"] += self.entry_height
         self.new_condition_y_position += self.entry_height
 
     def _respond_to_query(self, *args, **kwargs):
-        if random.random() <= 0.5:
+        adl_takes_statements = self.adl_takes_input.get_parsed_entries()
+        adl_causes_statements = self.adl_causes_input.get_parsed_entries()
+        observation_statements = self.observation_input.get_parsed_entries()
+        actions_input = self.actions_input.get_parsed_entries()
+        fluents_list = self._get_query_fluents_list()
+        timepoint = self._get_timepoint()
+
+        if resolve_condition_query(
+            adl_takes_statements,
+            adl_causes_statements,
+            observation_statements,
+            actions_input,
+            fluents_list,
+            timepoint,
+        ):
             response = "No"
         else:
             response = "Yes"
         self.response_label.text = response
+
+    def _get_query_fluents_list(self):
+        return [en["input"].text for en in self.condition_inputs_list]
+
+    def _get_timepoint(self):
+        return int(self.time_input.text)
 
 
 class ConditionsInput(InputContainerBase):
