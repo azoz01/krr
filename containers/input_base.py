@@ -6,11 +6,12 @@ from kivy.uix.relativelayout import RelativeLayout
 
 
 class InputContainerBase(RelativeLayout):
-    def __init__(self, entry_height=0.1):
-        super().__init__()
+    def __init__(self, entry_height=0.1, header=True, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.entry_height = entry_height
         self._initialize_layout()
-        self._initialize_header()
+        if header:
+            self._initialize_header()
         self._initialize_buttons()
         self.entry_list = []
         self.new_entry_y_position = 1 - 2 * self.entry_height
