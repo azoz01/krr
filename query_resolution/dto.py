@@ -25,3 +25,9 @@ class ObservationStatement:
 class ActionStatement:
     action: str
     time: int
+
+
+@dataclass(frozen=True)
+class QueryFluent:
+    fluent: str
+    negated: bool

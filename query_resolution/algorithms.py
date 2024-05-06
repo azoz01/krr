@@ -5,6 +5,7 @@ from query_resolution.dto import (
     AdlCausesStatement,
     AdlTakesStatement,
     ObservationStatement,
+    QueryFluent,
 )
 
 
@@ -26,7 +27,7 @@ def resolve_condition_query(
     adl_causes_statements: list[AdlCausesStatement],
     observation_statements: list[ObservationStatement],
     actions_input: list[ActionStatement],
-    fluents_list: list[str],
+    fluents_list: list[QueryFluent],
     timepoint: int,
 ):
     print(f"{adl_takes_statements=}")

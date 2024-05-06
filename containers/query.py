@@ -1,6 +1,7 @@
 from functools import partial
 
 from kivy.uix.button import Button
+from kivy.uix.checkbox import CheckBox
 from kivy.uix.label import Label
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
@@ -10,6 +11,7 @@ from query_resolution.algorithms import (
     resolve_condition_query,
     resolve_realizable_query,
 )
+from query_resolution.dto import QueryFluent
 
 
 class QueryContainer(RelativeLayout):
@@ -183,12 +185,32 @@ class ConditionQueryBox(RelativeLayout):
             return
         entry_id = len(self.condition_inputs_list)
         entry = dict()
-        input = TextInput(
-            text="f",
-            multiline=False,
-            size_hint=(0.9, self.entry_height),
-            background_color=(0.84, 0.85, 0.78, 1),
+
+        input_layout = RelativeLayout(
             pos_hint={"x": 0, "y": self.new_condition_y_position},
+            size_hint=(0.9, self.entry_height),
+        )
+        input_layout.add_widget(
+            TextInput(
+                text="f",
+                multiline=False,
+                size_hint=(0.55, 1),
+                background_color=(0.84, 0.85, 0.78, 1),
+                pos_hint={"x": 0},
+            )
+        )
+        input_layout.add_widget(
+            CheckBox(
+                size_hint=(0.05, 1),
+                pos_hint={"x": 0.6},
+            )
+        )
+        input_layout.add_widget(
+            Label(
+                text="negate",
+                pos_hint={"x": 0.75, "y": 0.5},
+                size_hint=(0.05, 0.1),
+            )
         )
         delete_button = Button(
             on_release=partial(self._delete_entry, entry),
@@ -198,9 +220,11 @@ class ConditionQueryBox(RelativeLayout):
             size_hint=(0.1, self.entry_height),
             pos_hint={"x": 0.9, "y": self.new_condition_y_position},
         )
-        entry.update({"id": entry_id, "input": input, "delete": delete_button})
+        entry.update(
+            {"id": entry_id, "input": input_layout, "delete": delete_button}
+        )
         self.condition_inputs_list.append(entry)
-        self.add_widget(input)
+        self.add_widget(input_layout)
         self.add_widget(delete_button)
         self.new_condition_y_position -= self.entry_height
 
@@ -238,7 +262,13 @@ class ConditionQueryBox(RelativeLayout):
         self.response_label.text = response
 
     def _get_query_fluents_list(self):
-        return [en["input"].text for en in self.condition_inputs_list]
+        return [
+            QueryFluent(
+                fluent=en["input"].children[-1].text,
+                negated=en["input"].children[-2].active,
+            )
+            for en in self.condition_inputs_list
+        ]
 
     def _get_timepoint(self):
         return int(self.time_input.text)
