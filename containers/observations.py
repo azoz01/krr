@@ -1,9 +1,9 @@
-from kivy.uix.checkbox import CheckBox
-from kivy.uix.label import Label
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
 
 from containers.input_base import InputContainerBase
+from containers.input_fields import TimeInput
+from containers.utils import parse_fluent_from_string
 from query_resolution.dto import ObservationStatement
 
 
@@ -22,31 +22,18 @@ class ObservationsInputContainer(InputContainerBase):
             TextInput(
                 text="f",
                 multiline=False,
-                size_hint=(0.4, 0.05),
+                size_hint=(0.65, 0.05),
                 background_color=(0.84, 0.85, 0.78, 1),
                 pos_hint={"x": 0},
             )
         )
         input_layout.add_widget(
-            TextInput(
+            TimeInput(
                 text="t",
                 multiline=False,
-                size_hint=(0.15, 0.05),
+                size_hint=(0.25, 0.05),
                 background_color=(0.84, 0.85, 0.78, 1),
-                pos_hint={"x": 0.4},
-            )
-        )
-        input_layout.add_widget(
-            CheckBox(
-                size_hint=(0.05, 0.05),
-                pos_hint={"x": 0.6},
-            )
-        )
-        input_layout.add_widget(
-            Label(
-                text="negate",
-                pos_hint={"x": 0.75, "y": -0.022},
-                size_hint=(0.05, 0.1),
+                pos_hint={"x": 0.65},
             )
         )
         return input_layout
@@ -54,9 +41,8 @@ class ObservationsInputContainer(InputContainerBase):
     def get_parsed_entries(self):
         return [
             ObservationStatement(
-                fluent=en["input"].children[-1].text,
+                fluent=parse_fluent_from_string(en["input"].children[-1].text),
                 time=int(en["input"].children[-2].text),
-                negated=en["input"].children[-3].active,
             )
             for en in self.entry_list
         ]

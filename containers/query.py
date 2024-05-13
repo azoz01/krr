@@ -1,17 +1,17 @@
 from functools import partial
 
 from kivy.uix.button import Button
-from kivy.uix.checkbox import CheckBox
 from kivy.uix.label import Label
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
 
 from containers.input_base import InputContainerBase
+from containers.input_fields import TimeInput, time_validation_registry
+from containers.utils import parse_fluent_from_string
 from query_resolution.algorithms import (
     resolve_condition_query,
     resolve_realizable_query,
 )
-from query_resolution.dto import QueryFluent
 
 
 class QueryContainer(RelativeLayout):
@@ -84,21 +84,24 @@ class RealizableQueryBox(RelativeLayout):
         self.actions_input = actions_input
 
     def _respond_to_query(self, *args, **kwargs):
-        adl_takes_statements = self.adl_takes_input.get_parsed_entries()
-        adl_causes_statements = self.adl_causes_input.get_parsed_entries()
-        observation_statements = self.observation_input.get_parsed_entries()
-        actions_input = self.actions_input.get_parsed_entries()
+        if time_validation_registry.all_inputs_are_valid_for_realizable():
+            adl_takes_statements = self.adl_takes_input.get_parsed_entries()
+            adl_causes_statements = self.adl_causes_input.get_parsed_entries()
+            observation_statements = (
+                self.observation_input.get_parsed_entries()
+            )
+            actions_input = self.actions_input.get_parsed_entries()
 
-        if resolve_realizable_query(
-            adl_takes_statements,
-            adl_causes_statements,
-            observation_statements,
-            actions_input,
-        ):
-            response = "No"
-        else:
-            response = "Yes"
-        self.response_label.text = response
+            if resolve_realizable_query(
+                adl_takes_statements,
+                adl_causes_statements,
+                observation_statements,
+                actions_input,
+            ):
+                response = "No"
+            else:
+                response = "Yes"
+            self.response_label.text = response
 
 
 class ConditionQueryBox(RelativeLayout):
@@ -146,7 +149,7 @@ class ConditionQueryBox(RelativeLayout):
         )
         self.add_widget(self.time_label)
 
-        self.time_input = TextInput(
+        self.time_input = TimeInput(
             text="t",
             multiline=False,
             size_hint=(0.5, 0.05),
@@ -194,22 +197,9 @@ class ConditionQueryBox(RelativeLayout):
             TextInput(
                 text="f",
                 multiline=False,
-                size_hint=(0.55, 1),
+                size_hint=(1, 1),
                 background_color=(0.84, 0.85, 0.78, 1),
                 pos_hint={"x": 0},
-            )
-        )
-        input_layout.add_widget(
-            CheckBox(
-                size_hint=(0.05, 1),
-                pos_hint={"x": 0.6},
-            )
-        )
-        input_layout.add_widget(
-            Label(
-                text="negate",
-                pos_hint={"x": 0.75, "y": 0.5},
-                size_hint=(0.05, 0.1),
             )
         )
         delete_button = Button(
@@ -241,32 +231,32 @@ class ConditionQueryBox(RelativeLayout):
         self.new_condition_y_position += self.entry_height
 
     def _respond_to_query(self, *args, **kwargs):
-        adl_takes_statements = self.adl_takes_input.get_parsed_entries()
-        adl_causes_statements = self.adl_causes_input.get_parsed_entries()
-        observation_statements = self.observation_input.get_parsed_entries()
-        actions_input = self.actions_input.get_parsed_entries()
-        fluents_list = self._get_query_fluents_list()
-        timepoint = self._get_timepoint()
+        if time_validation_registry.all_inputs_are_valid_for_condition():
+            adl_takes_statements = self.adl_takes_input.get_parsed_entries()
+            adl_causes_statements = self.adl_causes_input.get_parsed_entries()
+            observation_statements = (
+                self.observation_input.get_parsed_entries()
+            )
+            actions_input = self.actions_input.get_parsed_entries()
+            fluents_list = self._get_query_fluents_list()
+            timepoint = self._get_timepoint()
 
-        if resolve_condition_query(
-            adl_takes_statements,
-            adl_causes_statements,
-            observation_statements,
-            actions_input,
-            fluents_list,
-            timepoint,
-        ):
-            response = "No"
-        else:
-            response = "Yes"
-        self.response_label.text = response
+            if resolve_condition_query(
+                adl_takes_statements,
+                adl_causes_statements,
+                observation_statements,
+                actions_input,
+                fluents_list,
+                timepoint,
+            ):
+                response = "No"
+            else:
+                response = "Yes"
+            self.response_label.text = response
 
     def _get_query_fluents_list(self):
         return [
-            QueryFluent(
-                fluent=en["input"].children[-1].text,
-                negated=en["input"].children[-2].active,
-            )
+            parse_fluent_from_string(en["input"].children[-1].text)
             for en in self.condition_inputs_list
         ]
 

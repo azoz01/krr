@@ -2,6 +2,7 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
 
 from containers.input_base import InputContainerBase
+from containers.input_fields import TimeInput
 from query_resolution.dto import ActionStatement
 
 
@@ -26,7 +27,7 @@ class ActionsInputContainer(InputContainerBase):
             )
         )
         input_layout.add_widget(
-            TextInput(
+            TimeInput(
                 text="t",
                 multiline=False,
                 size_hint=(0.5, 0.05),

@@ -8,26 +8,25 @@ class AdlTakesStatement:
 
 
 @dataclass(frozen=True)
+class Fluent:
+    name: str
+    negated: bool
+
+
+@dataclass(frozen=True)
 class AdlCausesStatement:
     action: str
-    fluent: str
-    condition_fluents: list[str]
+    fluent: Fluent
+    condition_fluents: list[Fluent]
 
 
 @dataclass(frozen=True)
 class ObservationStatement:
-    fluent: str
+    fluent: Fluent
     time: int
-    negated: bool
 
 
 @dataclass(frozen=True)
 class ActionStatement:
     action: str
     time: int
-
-
-@dataclass(frozen=True)
-class QueryFluent:
-    fluent: str
-    negated: bool

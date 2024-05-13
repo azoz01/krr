@@ -1,7 +1,11 @@
+import re
+
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
 
 from containers.input_base import InputContainerBase
+from containers.input_fields import TimeInput
+from containers.utils import parse_fluent_from_string
 from query_resolution.dto import AdlCausesStatement, AdlTakesStatement
 
 
@@ -23,7 +27,7 @@ class AdlTakesInputContainer(InputContainerBase):
             )
         )
         input_layout.add_widget(
-            TextInput(
+            TimeInput(
                 text="t",
                 multiline=False,
                 size_hint=(0.5, 0.1),
@@ -55,7 +59,7 @@ class AdlCausesInputContainer(InputContainerBase):
             TextInput(
                 text="A",
                 multiline=False,
-                size_hint=(0.4, 0.1),
+                size_hint=(0.25, 0.1),
                 background_color=(0.84, 0.85, 0.78, 1),
                 pos_hint={"x": 0},
             )
@@ -64,9 +68,9 @@ class AdlCausesInputContainer(InputContainerBase):
             TextInput(
                 text="f",
                 multiline=False,
-                size_hint=(0.1, 0.1),
+                size_hint=(0.25, 0.1),
                 background_color=(0.84, 0.85, 0.78, 1),
-                pos_hint={"x": 0.4},
+                pos_hint={"x": 0.25},
             )
         )
         input_layout.add_widget(
@@ -84,11 +88,13 @@ class AdlCausesInputContainer(InputContainerBase):
         return [
             AdlCausesStatement(
                 action=en["input"].children[-1].text,
-                fluent=en["input"].children[-2].text,
-                condition_fluents=en["input"]
-                .children[-3]
-                .text.strip()
-                .split(","),
+                fluent=parse_fluent_from_string(en["input"].children[-2].text),
+                condition_fluents=[
+                    parse_fluent_from_string(s)
+                    for s in re.sub(
+                        r"\s+", " ", en["input"].children[-3].text
+                    ).split(",")
+                ],
             )
             for en in self.entry_list
         ]
