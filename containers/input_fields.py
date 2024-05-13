@@ -44,7 +44,6 @@ class TimeInput(TextInput):
 
     def is_input_valid(self, input):
         try:
-            int(input)
+            return int(input) >= 0
         except ValueError:
             return False
-        return True
