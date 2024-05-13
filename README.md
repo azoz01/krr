@@ -5,3 +5,8 @@ To run application execute:
 ```
 python main.py
 ```
+
+To build application to exe run:
+```
+pyinstaller --onefile --noconsole main.py
+```
