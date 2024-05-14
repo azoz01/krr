@@ -4,6 +4,8 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.relativelayout import RelativeLayout
 
+from containers.input_fields import TimeInput
+
 
 class InputContainerBase(RelativeLayout):
     def __init__(self, entry_height=0.1, header=True, *args, **kwargs):
@@ -73,9 +75,13 @@ class InputContainerBase(RelativeLayout):
         deleted_entry = self.entry_list.pop(entry_id)
         self.remove_widget(deleted_entry["input"])
         self.remove_widget(deleted_entry["delete"])
+        for child in deleted_entry["input"].children:
+            if isinstance(child, TimeInput):
+                child.cleanup()
         for i in range(entry_id, len(self.entry_list)):
             entry = self.entry_list[i]
             entry["id"] -= 1
             entry["input"].pos_hint["y"] += self.entry_height
             entry["delete"].pos_hint["y"] += self.entry_height
         self.new_entry_y_position += self.entry_height
+        del deleted_entry["input"]

@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from kivy.uix.textinput import TextInput
 
 
@@ -14,13 +16,15 @@ class TimeValidationRegistry:
             self.valid_inputs_indicators[index_to_modify] = output
             return output
 
-        return monitored_function
+        return index_to_modify, monitored_function
 
     def all_inputs_are_valid_for_condition(self):
         return all(self.valid_inputs_indicators)
 
     def all_inputs_are_valid_for_realizable(self):
-        return all(self.valid_inputs_indicators[1:])
+        temp = deepcopy(self.valid_inputs_indicators)
+        temp.pop(1)
+        return all(temp)
 
 
 time_validation_registry = TimeValidationRegistry()
@@ -31,8 +35,8 @@ class TimeInput(TextInput):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.default_color = self.background_color
-        self.is_input_valid = time_validation_registry.register_function(
-            self.is_input_valid
+        self.registry_index, self.is_input_valid = (
+            time_validation_registry.register_function(self.is_input_valid)
         )
 
     def on_focus(self, instance, value):
@@ -47,3 +51,8 @@ class TimeInput(TextInput):
             return int(input) >= 0
         except ValueError:
             return False
+
+    def cleanup(self):
+        time_validation_registry.valid_inputs_indicators[
+            self.registry_index
+        ] = True
