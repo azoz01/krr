@@ -98,9 +98,9 @@ class RealizableQueryBox(RelativeLayout):
                 observation_statements,
                 actions_input,
             ):
-                response = "No"
-            else:
                 response = "Yes"
+            else:
+                response = "No"
             self.response_label.text = response
 
 
