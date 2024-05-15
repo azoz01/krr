@@ -40,25 +40,35 @@ def match_statements_for_action(takes_statements: list[AdlTakesStatement],
 
 
 def change_fluents(current_fluents: list[Fluent], action_statements: list[AdlCausesStatement]) -> list[Fluent]:
-    action_with_met_condition_statement = None
+    action_with_met_condition_statement = []
     for action_statement in action_statements:
-        if action_with_met_condition_statement is not None:
-            break
+        #if action_with_met_condition_statement is not None:
+        #    break
         if len(action_statement.condition_fluents) == 0:
-            action_with_met_condition_statement = action_statement
+            action_with_met_condition_statement.append(action_statement)
+        if len(action_statement.condition_fluents) == 1 and action_statement.condition_fluents[0].name == '':
+            action_with_met_condition_statement.append(action_statement)
         else:
             for condition_fluent in action_statement.condition_fluents:
                 for fluent in current_fluents:
                     if fluent.name == condition_fluent.name:
                         if fluent.negated == condition_fluent.negated:
-                            action_with_met_condition_statement = action_statement
+                            action_with_met_condition_statement.append(action_statement)
                         else:
-                            action_with_met_condition_statement = None
                             break
-    if action_with_met_condition_statement is None:
+    if len(action_with_met_condition_statement) == 0:
         return current_fluents
-    return [fluent if fluent.name != action_with_met_condition_statement.fluent.name else
-            action_with_met_condition_statement.fluent for fluent in current_fluents]
+    fluents_names_to_change = [action.fluent.name for action in action_with_met_condition_statement]
+    fluents_to_change = [action.fluent for action in action_with_met_condition_statement]
+    new_fluents = [0 for i in range(len(current_fluents))]
+    for i in range(len(current_fluents)):
+        if current_fluents[i].name not in fluents_names_to_change:
+            new_fluents[i] = current_fluents[i]
+        else:
+            for j in range(len(fluents_names_to_change)):
+                if current_fluents[i].name == fluents_names_to_change[j]:
+                    new_fluents[i] = fluents_to_change[j]
+    return new_fluents
 
 
 def get_fluents_names_from_causes_statements(causes_statements: list[AdlCausesStatement]) -> list[str]:
