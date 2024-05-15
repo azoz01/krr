@@ -121,9 +121,9 @@ class RealizableQueryBox(RelativeLayout):
                 actions_input,
                 time_bound,
             ):
-                response = "No"
-            else:
                 response = "Yes"
+            else:
+                response = "No"
             self.response_label.text = response
 
 
