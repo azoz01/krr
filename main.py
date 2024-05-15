@@ -1,3 +1,5 @@
+import gc
+
 from kivy.app import App
 from kivy.core.window import Window
 
@@ -18,5 +20,6 @@ class MainApp(App):
 # 9CAFAA - background
 
 if __name__ == "__main__":
+    gc.set_threshold(2, 2, 2)
     app = MainApp()
     app.run()

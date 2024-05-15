@@ -15,18 +15,17 @@ from query_resolution.query_resolution_utils import (
     get_fluents_names_from_causes_statements
 )
 
-TEMP_FIXED_TERMINATION_POINT = 15
-
 
 def resolve_realizable_query(
     adl_takes_statements: list[AdlTakesStatement],
     adl_causes_statements: list[AdlCausesStatement],
     observation_statements: list[ObservationStatement],
     actions_input: list[ActionStatement],
+    time_bound: int,
 ) -> bool:
     actions_start_end_timepoints = get_actions_start_end_dict(adl_takes_statements, actions_input)
     # check if all actions terminate before the termination timepoint:
-    if max(list(actions_start_end_timepoints.values())) > TEMP_FIXED_TERMINATION_POINT:
+    if max(list(actions_start_end_timepoints.values())) > time_bound:
         return False
     # check if any actions overlap:
     sorted_actions_timepoints = sorted(actions_start_end_timepoints.items())
@@ -64,6 +63,7 @@ def resolve_condition_query(
     actions_input: list[ActionStatement],
     fluents_list: list[Fluent],
     timepoint: int,
+    time_bound: int,
 ) -> bool:
     actions_start_end_timepoints = get_actions_start_end_dict(adl_takes_statements, actions_input)
     fluents_names = [action.fluent.name for action in adl_causes_statements]
@@ -148,6 +148,7 @@ def conditions_met_for_specific_model(
 
 
 def _test() -> None:
+    time_bound = 15
     adl_takes_statements = [AdlTakesStatement(action='STAND_UP', time=2), AdlTakesStatement(action='SIT_DOWN', time=2),
                             AdlTakesStatement(action='SWITCH', time=1)]
     adl_causes_statements = [AdlCausesStatement(action='STAND_UP', fluent=Fluent(name='standing', negated=False),
@@ -164,13 +165,14 @@ def _test() -> None:
     observation_statements = []
     actions_input = [ActionStatement(action='SWITCH', time=1), ActionStatement(action='SIT_DOWN', time=2),
                      ActionStatement(action='STAND_UP', time=4), ActionStatement(action='SWITCH', time=6)]
-    print(resolve_realizable_query(adl_takes_statements, adl_causes_statements, observation_statements, actions_input))
+    print(resolve_realizable_query(adl_takes_statements, adl_causes_statements, observation_statements, actions_input,
+                                   time_bound))
     print(resolve_condition_query(adl_takes_statements, adl_causes_statements, observation_statements, actions_input,
-                                  [Fluent('on', True)], 7))
+                                  [Fluent('on', True)], 7, time_bound))
     print(resolve_condition_query(adl_takes_statements, adl_causes_statements, observation_statements, actions_input,
-                                  [Fluent('standing', True)], 4))
+                                  [Fluent('standing', True)], 4, time_bound))
     print(resolve_condition_query(adl_takes_statements, adl_causes_statements, observation_statements, actions_input,
-                                  [Fluent('standing', True)], 5))
+                                  [Fluent('standing', True)], 5, time_bound))
 
 
 if __name__ == '__main__':
