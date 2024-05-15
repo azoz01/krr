@@ -3,7 +3,6 @@ from query_resolution.dto import (
     AdlCausesStatement,
     AdlTakesStatement,
     Fluent,
-    ObservationStatement,
 )
 
 
@@ -28,35 +27,38 @@ def get_actions_start_end_dict(
 
 def match_statements_for_action(takes_statements: list[AdlTakesStatement],
                                 causes_statements: list[AdlCausesStatement],
-                                action: ActionStatement) -> tuple[AdlTakesStatement, AdlCausesStatement]:
+                                action: ActionStatement) -> tuple[AdlTakesStatement, list[AdlCausesStatement]]:
     takes_statement = None
-    causes_statement = None
+    causes_statement = []
     for statement in takes_statements:
         if statement.action == action.action:
             takes_statement = statement
     for statement in causes_statements:
         if statement.action == action.action:
-            causes_statement = statement
+            causes_statement.append(statement)
     return takes_statement, causes_statement
 
 
-def change_fluents(current_fluents: list[Fluent], action_statement: AdlCausesStatement):
-    conditions_met = False
-    if len(action_statement.condition_fluents) == 0:
-        conditions_met = True
-    else:
-        for condition_fluent in action_statement.condition_fluents:
-            for fluent in current_fluents:
-                if fluent.name == condition_fluent.name:
-                    if fluent.negated == condition_fluent.negated:
-                        conditions_met = True
-                    else:
-                        conditions_met = False
-                        break
-    if not conditions_met:
+def change_fluents(current_fluents: list[Fluent], action_statements: list[AdlCausesStatement]) -> list[Fluent]:
+    action_with_met_condition_statement = None
+    for action_statement in action_statements:
+        if action_with_met_condition_statement is not None:
+            break
+        if len(action_statement.condition_fluents) == 0:
+            action_with_met_condition_statement = action_statement
+        else:
+            for condition_fluent in action_statement.condition_fluents:
+                for fluent in current_fluents:
+                    if fluent.name == condition_fluent.name:
+                        if fluent.negated == condition_fluent.negated:
+                            action_with_met_condition_statement = action_statement
+                        else:
+                            action_with_met_condition_statement = None
+                            break
+    if action_with_met_condition_statement is None:
         return current_fluents
-    return [fluent if fluent.name != action_statement.fluent.name else action_statement.fluent for fluent in
-            current_fluents]
+    return [fluent if fluent.name != action_with_met_condition_statement.fluent.name else
+            action_with_met_condition_statement.fluent for fluent in current_fluents]
 
 
 def get_fluents_names_from_causes_statements(causes_statements: list[AdlCausesStatement]) -> list[str]:

@@ -1,4 +1,3 @@
-import random
 from itertools import product
 
 from query_resolution.dto import (
@@ -65,9 +64,9 @@ def resolve_condition_query(
     actions_input: list[ActionStatement],
     fluents_list: list[Fluent],
     timepoint: int,
-):
+) -> bool:
     actions_start_end_timepoints = get_actions_start_end_dict(adl_takes_statements, actions_input)
-    fluents_names = [fluent.name for fluent in fluents_list]
+    fluents_names = [action.fluent.name for action in adl_causes_statements]
     fluents_names = list(set(fluents_names))
     negated_combinations = product([True, False], repeat=len(fluents_names))
     possible_initial_fluents = []
@@ -87,15 +86,21 @@ def scenario_realizable_for_specific_model(
     observation_statements: list[ObservationStatement],
     actions_input: list[ActionStatement],
     initial_fluents: list[Fluent]
-):
+) -> bool:
     # for now, the assumption is that the user inputs actions in a correct order
     current_timepoint = actions_input[0].time
     current_fluents = initial_fluents
     for action in actions_input:
-        takes_statement, causes_statement = match_statements_for_action(adl_takes_statements, adl_causes_statements,
+        takes_statement, causes_statements = match_statements_for_action(adl_takes_statements, adl_causes_statements,
                                                                         action)
-        current_timepoint += takes_statement.time
-        current_fluents = change_fluents(current_fluents, causes_statement)
+        next_timepoint = current_timepoint + takes_statement.time
+        # if the action changing the fluent is performing, we do not know the fluents' state
+        for observation in observation_statements:
+            for causes_statement in causes_statements:
+                if current_timepoint < observation.time < next_timepoint and observation.fluent == causes_statement.fluent:
+                    return False
+        current_timepoint = next_timepoint
+        current_fluents = change_fluents(current_fluents, causes_statements)
         for observation in observation_statements:
             if observation.time == current_timepoint:
                 for fluent in current_fluents:
@@ -112,7 +117,7 @@ def conditions_met_for_specific_model(
     initial_fluents: list[Fluent],
     condition_fluents: list[Fluent],
     timepoint: int
-):
+) -> bool:
     # for now, the assumption is that the user inputs actions in a correct order
     current_timepoint = actions_input[0].time
     current_fluents = initial_fluents
@@ -123,10 +128,16 @@ def conditions_met_for_specific_model(
                     if fluent.negated != current_fluent.negated:
                         return False
     for action in actions_input:
-        takes_statement, causes_statement = match_statements_for_action(adl_takes_statements, adl_causes_statements,
-                                                                        action)
-        current_timepoint += takes_statement.time
-        current_fluents = change_fluents(current_fluents, causes_statement)
+        takes_statement, causes_statements = match_statements_for_action(adl_takes_statements, adl_causes_statements,
+                                                                         action)
+        next_timepoint = current_timepoint + takes_statement.time
+        # if the action changing the fluent is performing, we do not know the fluents' state
+        for fluent in condition_fluents:
+            for causes_statement in causes_statements:
+                if current_timepoint < timepoint < next_timepoint and fluent.name == causes_statement.fluent.name:
+                    return False
+        current_timepoint = next_timepoint
+        current_fluents = change_fluents(current_fluents, causes_statements)
         if timepoint == current_timepoint:
             for fluent in condition_fluents:
                 for current_fluent in current_fluents:
@@ -136,21 +147,30 @@ def conditions_met_for_specific_model(
     return True
 
 
-
-
-def _test():
-    adl_takes_statements = [AdlTakesStatement(action='LOAD', time=3), AdlTakesStatement(action='SHOOT', time=1)]
-    adl_causes_statements = [AdlCausesStatement(action='SHOOT', fluent=Fluent(name='loaded', negated=True),
+def _test() -> None:
+    adl_takes_statements = [AdlTakesStatement(action='STAND_UP', time=2), AdlTakesStatement(action='SIT_DOWN', time=2),
+                            AdlTakesStatement(action='SWITCH', time=1)]
+    adl_causes_statements = [AdlCausesStatement(action='STAND_UP', fluent=Fluent(name='standing', negated=False),
                                                 condition_fluents=[]),
-                             AdlCausesStatement(action='SHOOT', fluent=Fluent(name='alive', negated=True),
-                                                condition_fluents=[Fluent(name='loaded', negated=False)]),
-                             AdlCausesStatement(action='LOAD', fluent=Fluent('loaded', False),
-                                                condition_fluents=[])]
-    observation_statements = [ObservationStatement(fluent=Fluent(name='alive', negated=True), time=5),
-                              ObservationStatement(fluent=Fluent(name='loaded', negated=False), time=1)]
-    actions_input = [ActionStatement(action='LOAD', time=1), ActionStatement(action='SHOOT', time=4)]
+                             AdlCausesStatement(action='SIT_DOWN', fluent=Fluent(name='standing', negated=True),
+                                                condition_fluents=[]),
+                             AdlCausesStatement(action='SWITCH', fluent=Fluent('on', False),
+                                                condition_fluents=[Fluent('standing', False), Fluent('on', True)]),
+                             AdlCausesStatement(action='SWITCH', fluent=Fluent('on', True),
+                                                condition_fluents=[Fluent('standing', False), Fluent('on', False)])
+                             ]
+    observation_statements = [ObservationStatement(fluent=Fluent('alive', negated=False), time=1),
+                              ObservationStatement(fluent=Fluent('alive', negated=True), time=6)]
+    observation_statements = []
+    actions_input = [ActionStatement(action='SWITCH', time=1), ActionStatement(action='SIT_DOWN', time=2),
+                     ActionStatement(action='STAND_UP', time=4), ActionStatement(action='SWITCH', time=6)]
+    print(resolve_realizable_query(adl_takes_statements, adl_causes_statements, observation_statements, actions_input))
     print(resolve_condition_query(adl_takes_statements, adl_causes_statements, observation_statements, actions_input,
-                                  [Fluent('loaded', False)], 4))
+                                  [Fluent('on', True)], 7))
+    print(resolve_condition_query(adl_takes_statements, adl_causes_statements, observation_statements, actions_input,
+                                  [Fluent('standing', True)], 4))
+    print(resolve_condition_query(adl_takes_statements, adl_causes_statements, observation_statements, actions_input,
+                                  [Fluent('standing', True)], 5))
 
 
 if __name__ == '__main__':
