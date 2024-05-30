@@ -43,7 +43,7 @@ class QueryContainer(RelativeLayout):
         )
         self.add_widget(time_bound_label)
         self.time_bound_input = TimeInput(
-            text="T",
+            text="",
             multiline=False,
             size_hint=(0.6, 0.05),
             background_color=(0.84, 0.85, 0.78, 1),
@@ -140,6 +140,17 @@ class RealizableQueryBox(RelativeLayout):
                 self.response_label.text = response
             except ContradictiveLanguageException as e:
                 create_exception_popup(e)
+            except Exception as e:
+                e.message = "Unexpected error"
+                create_exception_popup(
+                    e
+                )
+        else:
+            ex = Exception()
+            ex.message = "Invalid input"
+            create_exception_popup(
+                ex
+            )
 
 
 class ConditionQueryBox(RelativeLayout):
@@ -296,6 +307,17 @@ class ConditionQueryBox(RelativeLayout):
                 self.response_label.text = response
             except ContradictiveLanguageException as e:
                 create_exception_popup(e)
+            except Exception as e:
+                e.message = "Unexpected error"
+                create_exception_popup(
+                    e
+                )
+        else:
+            ex = Exception()
+            ex.message = "Invalid input"
+            create_exception_popup(
+                ex
+            )
 
     def _get_query_fluents_list(self):
         return [
