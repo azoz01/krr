@@ -16,7 +16,7 @@ class GlobalValueHolder:
 
 HELP_TEXT = """
 This is an application that answers queries corresponding to Action Description Language
-analogous to AL. It takes statements from action description language and scenario e. g.
+analogous to AL. It takes statements from action description language and scenario i.e.
 observations and actions.
 
 General remarks:
@@ -24,6 +24,8 @@ General remarks:
     * To remove entry click the '-' icon which corresponds to this entry.
     * Provided times must be non-negative integers.
     * To provide negated fluent 'f' type 'not f'.
+    * A set of actions and fluents are extracted from ADL definition so there
+        is no need to declare them explicitly.
 
 Input:
     * To provide 'A takes t' statements from ADL input them to the upper field in the first column.
@@ -31,6 +33,7 @@ Input:
     * To provide 'A causes f if f1, f2, ...' statements from ADL input them to the bottom field in
         the first column. In the first text field provide the name of the action 'A' and in the second
         fluent 'f'. In the last field provide a comma-separated list of fluents (or their negations).
+        To make no condition on statement (A casuses f if T), left the last field empty.
     * To provide observations (f, t) from the scenario input them to the field in the second column. In the
         first text field provide the name of the fluent 'f' and in the second time 't'.
     * To provide actions (A, t) from the scenario input them to the field in the third column. In the first
