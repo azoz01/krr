@@ -7,12 +7,11 @@ from query_resolution.dto import (
     Fluent,
     ObservationStatement,
 )
-
 from query_resolution.query_resolution_utils import (
-    get_actions_start_end_dict,
-    match_statements_for_action,
     change_fluents,
-    get_fluents_names_from_causes_statements
+    get_actions_start_end_dict,
+    get_fluents_names_from_causes_statements,
+    match_statements_for_action,
 )
 
 

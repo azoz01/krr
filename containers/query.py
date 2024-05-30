@@ -1,16 +1,26 @@
 from functools import partial
 
-from kivy.uix.button import Button
-from kivy.uix.label import Label
+from kivy.core.window import Window
+from kivy.uix.popup import Popup
 from kivy.uix.relativelayout import RelativeLayout
-from kivy.uix.textinput import TextInput
 
+from containers.custom_components import TimeInput, time_validation_registry
 from containers.input_base import InputContainerBase
-from containers.input_fields import TimeInput, time_validation_registry
-from containers.utils import parse_fluent_from_string
+from containers.utils import (
+    ContradictiveLanguageException,
+    parse_fluent_from_string,
+)
 from query_resolution.algorithms import (
     resolve_condition_query,
     resolve_realizable_query,
+)
+
+from .custom_components import (
+    ManagedButton,
+    ManagedEntryButton,
+    ManagedLabel,
+    ManagedTextInput,
+    default_font_size,
 )
 
 
@@ -22,9 +32,11 @@ class QueryContainer(RelativeLayout):
         adl_causes_input,
         observation_input,
         actions_input,
+        *args,
+        **kwargs
     ):
-        super().__init__()
-        time_bound_label = Label(
+        super().__init__(*args, **kwargs)
+        time_bound_label = ManagedLabel(
             text="T - upper bound to time",
             size_hint=(1, 0.05),
             pos_hint={"x": 0, "y": 0.95},
@@ -38,7 +50,7 @@ class QueryContainer(RelativeLayout):
             pos_hint={"x": 0.2, "y": 0.9},
         )
         self.add_widget(self.time_bound_input)
-        label = Label(
+        label = ManagedLabel(
             text="Queries",
             size_hint=(1, 0.05),
             pos_hint={"x": 0, "y": 0.85},
@@ -76,14 +88,14 @@ class RealizableQueryBox(RelativeLayout):
         parent,
     ):
         super().__init__()
-        label = Label(
+        label = ManagedLabel(
             text="Is scenario realizable?",
             halign="left",
             size_hint=(0.7, 0.05),
             pos_hint={"x": 0, "y": 0.8},
         )
         self.add_widget(label)
-        self.execute_query_button = Button(
+        self.execute_query_button = ManagedButton(
             on_release=self._respond_to_query,
             text="Run",
             background_color=(0.84, 0.85, 0.78, 1),
@@ -91,7 +103,7 @@ class RealizableQueryBox(RelativeLayout):
             pos_hint={"x": 0.06, "y": 0.75},
         )
         self.add_widget(self.execute_query_button)
-        self.response_label = Label(
+        self.response_label = ManagedLabel(
             text="",
             size_hint=(1, 0.05),
             pos_hint={"x": 0.1, "y": 0.75},
@@ -114,17 +126,20 @@ class RealizableQueryBox(RelativeLayout):
             actions_input = self.actions_input.get_parsed_entries()
             time_bound = self.parent_input.get_time_bound()
 
-            if resolve_realizable_query(
-                adl_takes_statements,
-                adl_causes_statements,
-                observation_statements,
-                actions_input,
-                time_bound,
-            ):
-                response = "Yes"
-            else:
-                response = "No"
-            self.response_label.text = response
+            try:
+                if resolve_realizable_query(
+                    adl_takes_statements,
+                    adl_causes_statements,
+                    observation_statements,
+                    actions_input,
+                    time_bound,
+                ):
+                    response = "Yes"
+                else:
+                    response = "No"
+                self.response_label.text = response
+            except ContradictiveLanguageException as e:
+                create_exception_popup(e)
 
 
 class ConditionQueryBox(RelativeLayout):
@@ -141,7 +156,7 @@ class ConditionQueryBox(RelativeLayout):
 
         self.entry_height = 0.05
 
-        label = Label(
+        label = ManagedLabel(
             text="Does set of fluents hold at t?",
             halign="left",
             size_hint=(0.88, 0.1),
@@ -149,7 +164,7 @@ class ConditionQueryBox(RelativeLayout):
         )
         self.add_widget(label)
 
-        self.execute_query_button = Button(
+        self.execute_query_button = ManagedButton(
             on_release=self._respond_to_query,
             text="Run",
             background_color=(0.84, 0.85, 0.78, 1),
@@ -158,14 +173,14 @@ class ConditionQueryBox(RelativeLayout):
         )
         self.add_widget(self.execute_query_button)
 
-        self.response_label = Label(
+        self.response_label = ManagedLabel(
             text="",
             size_hint=(1, 0.05),
             pos_hint={"x": 0.1, "y": 0.62},
         )
         self.add_widget(self.response_label)
 
-        self.time_label = Label(
+        self.time_label = ManagedLabel(
             text="Timepoint",
             halign="left",
             size_hint=(0.26, 0.05),
@@ -182,17 +197,16 @@ class ConditionQueryBox(RelativeLayout):
         )
         self.add_widget(self.time_input)
 
-        self.conditions_label = Label(
+        self.conditions_label = ManagedLabel(
             text="Fluents",
             size_hint=(0.8, self.entry_height),
             pos_hint={"x": 0, "y": 0.5},
         )
         self.add_widget(self.conditions_label)
 
-        self.add_condition_button = Button(
+        self.add_condition_button = ManagedButton(
             on_release=self._add_condition,
             text="+",
-            font_size=22,
             background_color=(0.84, 0.85, 0.78, 1),
             size_hint=(0.2, self.entry_height),
             pos_hint={"x": 0.8, "y": 0.5},
@@ -219,7 +233,7 @@ class ConditionQueryBox(RelativeLayout):
             size_hint=(0.9, self.entry_height),
         )
         input_layout.add_widget(
-            TextInput(
+            ManagedTextInput(
                 text="f",
                 multiline=False,
                 size_hint=(1, 1),
@@ -227,10 +241,9 @@ class ConditionQueryBox(RelativeLayout):
                 pos_hint={"x": 0},
             )
         )
-        delete_button = Button(
+        delete_button = ManagedEntryButton(
             on_release=partial(self._delete_entry, entry),
             text="-",
-            font_size=22,
             background_color=(0.84, 0.85, 0.78, 1),
             size_hint=(0.1, self.entry_height),
             pos_hint={"x": 0.9, "y": self.new_condition_y_position},
@@ -267,19 +280,22 @@ class ConditionQueryBox(RelativeLayout):
             timepoint = self._get_timepoint()
             time_bound = self.parent_input.get_time_bound()
 
-            if resolve_condition_query(
-                adl_takes_statements,
-                adl_causes_statements,
-                observation_statements,
-                actions_input,
-                fluents_list,
-                timepoint,
-                time_bound,
-            ):
-                response = "No"
-            else:
-                response = "Yes"
-            self.response_label.text = response
+            try:
+                if resolve_condition_query(
+                    adl_takes_statements,
+                    adl_causes_statements,
+                    observation_statements,
+                    actions_input,
+                    fluents_list,
+                    timepoint,
+                    time_bound,
+                ):
+                    response = "No"
+                else:
+                    response = "Yes"
+                self.response_label.text = response
+            except ContradictiveLanguageException as e:
+                create_exception_popup(e)
 
     def _get_query_fluents_list(self):
         return [
@@ -300,7 +316,7 @@ class ConditionsInput(InputContainerBase):
         pos_hint = {"y": self.new_entry_y_position, "x": 0}
         input_layout = RelativeLayout(pos_hint=pos_hint)
         input_layout.add_widget(
-            TextInput(
+            ManagedTextInput(
                 text="A",
                 multiline=False,
                 size_hint=(0.5, 0.1),
@@ -309,3 +325,15 @@ class ConditionsInput(InputContainerBase):
             )
         )
         return input_layout
+
+
+def create_exception_popup(exception):
+    popup = Popup(
+        title=type(exception).__name__,
+        title_size=default_font_size.val,
+        content=ManagedLabel(text=exception.message),
+        size_hint=(None, None),
+        size=(int(Window.width * 0.4), int(Window.height * 0.4)),
+        overlay_color=(0, 0, 0, 0),
+    )
+    popup.open()

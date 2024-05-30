@@ -1,12 +1,13 @@
 import re
 
 from kivy.uix.relativelayout import RelativeLayout
-from kivy.uix.textinput import TextInput
 
+from containers.custom_components import TimeInput
 from containers.input_base import InputContainerBase
-from containers.input_fields import TimeInput
 from containers.utils import parse_fluent_from_string
 from query_resolution.dto import AdlCausesStatement, AdlTakesStatement
+
+from .custom_components import ManagedTextInput
 
 
 class AdlTakesInputContainer(InputContainerBase):
@@ -18,7 +19,7 @@ class AdlTakesInputContainer(InputContainerBase):
         pos_hint = {"y": self.new_entry_y_position, "x": 0}
         input_layout = RelativeLayout(pos_hint=pos_hint)
         input_layout.add_widget(
-            TextInput(
+            ManagedTextInput(
                 text="A",
                 multiline=False,
                 size_hint=(0.5, 0.1),
@@ -56,7 +57,7 @@ class AdlCausesInputContainer(InputContainerBase):
         pos_hint = {"y": self.new_entry_y_position, "x": 0}
         input_layout = RelativeLayout(pos_hint=pos_hint)
         input_layout.add_widget(
-            TextInput(
+            ManagedTextInput(
                 text="A",
                 multiline=False,
                 size_hint=(0.25, 0.1),
@@ -65,7 +66,7 @@ class AdlCausesInputContainer(InputContainerBase):
             )
         )
         input_layout.add_widget(
-            TextInput(
+            ManagedTextInput(
                 text="f",
                 multiline=False,
                 size_hint=(0.25, 0.1),
@@ -74,7 +75,7 @@ class AdlCausesInputContainer(InputContainerBase):
             )
         )
         input_layout.add_widget(
-            TextInput(
+            ManagedTextInput(
                 text="f1, f2, ...",
                 multiline=False,
                 size_hint=(0.5, 0.1),

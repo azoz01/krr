@@ -1,6 +1,50 @@
 from copy import deepcopy
 
+from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
+
+from containers.utils import GlobalValueHolder
+
+managed_fields = []
+default_font_size = GlobalValueHolder(15)
+
+
+class ManagedTextInput(TextInput):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        managed_fields.append(self)
+        self.font_size = default_font_size.val
+
+
+class ManagedLabel(Label):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        managed_fields.append(self)
+        self.font_size = default_font_size.val
+
+
+class ManagedButton(Button):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        managed_fields.append(self)
+        self.font_size = default_font_size.val
+
+
+class ManagedEntryButton(Button):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cleanup_callback = kwargs.get("on_release", lambda x: None)
+        managed_fields.append(self)
+        self.font_size = default_font_size.val
+
+    def delete(self):
+        self.cleanup_callback()
+        managed_fields.pop(managed_fields.index(self))
 
 
 class TimeValidationRegistry:
@@ -30,7 +74,7 @@ class TimeValidationRegistry:
 time_validation_registry = TimeValidationRegistry()
 
 
-class TimeInput(TextInput):
+class TimeInput(ManagedTextInput):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

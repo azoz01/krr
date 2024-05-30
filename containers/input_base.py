@@ -1,10 +1,13 @@
 from functools import partial
 
-from kivy.uix.button import Button
-from kivy.uix.label import Label
 from kivy.uix.relativelayout import RelativeLayout
 
-from containers.input_fields import TimeInput
+from containers.custom_components import (
+    ManagedButton,
+    ManagedEntryButton,
+    ManagedLabel,
+    TimeInput,
+)
 
 
 class InputContainerBase(RelativeLayout):
@@ -32,7 +35,7 @@ class InputContainerBase(RelativeLayout):
             self.border_color = (0, 0, 0, 0)
 
     def _initialize_header(self):
-        label = Label(
+        label = ManagedLabel(
             text=self.get_header_label_text(),
             size_hint=(0.8, self.entry_height),
             pos_hint={"x": 0, "y": 1 - self.entry_height},
@@ -40,10 +43,9 @@ class InputContainerBase(RelativeLayout):
         self.add_widget(label)
 
     def _initialize_buttons(self):
-        add_entry_button = Button(
+        add_entry_button = ManagedButton(
             on_release=self._add_entry,
             text="+",
-            font_size=22,
             background_color=(0.84, 0.85, 0.78, 1),
             size_hint=(0.2, self.entry_height),
             pos_hint={"x": 0.8, "y": 1 - self.entry_height},
@@ -51,15 +53,14 @@ class InputContainerBase(RelativeLayout):
         self.add_widget(add_entry_button)
 
     def _add_entry(self, *args, **kwargs):
-        if self.new_entry_y_position < -0.0001:
+        if self.new_entry_y_position < -0.01:
             return
         entry_id = len(self.entry_list)
         entry = dict()
         input = self.get_entry_input()
-        delete_button = Button(
+        delete_button = ManagedEntryButton(
             on_release=partial(self._delete_entry, entry),
             text="-",
-            font_size=22,
             background_color=(0.84, 0.85, 0.78, 1),
             size_hint=(0.1, self.entry_height),
             pos_hint={"x": 0.9, "y": self.new_entry_y_position},

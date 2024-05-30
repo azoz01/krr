@@ -1,15 +1,16 @@
 from kivy.uix.relativelayout import RelativeLayout
-from kivy.uix.textinput import TextInput
 
+from containers.custom_components import TimeInput
 from containers.input_base import InputContainerBase
-from containers.input_fields import TimeInput
 from query_resolution.dto import ActionStatement
+
+from .custom_components import ManagedTextInput
 
 
 class ActionsInputContainer(InputContainerBase):
 
-    def __init__(self):
-        super().__init__(entry_height=0.05)
+    def __init__(self, *args, **kwargs):
+        super().__init__(entry_height=0.05, *args, **kwargs)
 
     def get_header_label_text(self):
         return "Actions"
@@ -18,7 +19,7 @@ class ActionsInputContainer(InputContainerBase):
         pos_hint = {"y": self.new_entry_y_position, "x": 0}
         input_layout = RelativeLayout(pos_hint=pos_hint)
         input_layout.add_widget(
-            TextInput(
+            ManagedTextInput(
                 text="A",
                 multiline=False,
                 size_hint=(0.5, 0.05),
