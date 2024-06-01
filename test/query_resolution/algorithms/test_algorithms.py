@@ -1,14 +1,11 @@
+import pytest
+
+from containers.utils import ContradictiveLanguageException
 from query_resolution.algorithms import (
     resolve_condition_query,
     resolve_realizable_query,
 )
-from query_resolution.dto import (
-    ActionStatement,
-    AdlCausesStatement,
-    AdlTakesStatement,
-    Fluent,
-    ObservationStatement,
-)
+from query_resolution.dto import Fluent
 
 
 def test_example_1_1(scenario_1, realization_1_1):
@@ -173,3 +170,17 @@ def test_example_2_2(scenario_2, realization_2_2):
     assert is_realizable
 
     assert is_true_1
+
+
+def test_example_0(scenario_0, realization_0_0):
+    adl_takes_statements, adl_causes_statements = scenario_0
+    observation_statements, actions_input, time_bound = realization_0_0
+
+    with pytest.raises(ContradictiveLanguageException):
+        _ = resolve_realizable_query(
+            adl_takes_statements,
+            adl_causes_statements,
+            observation_statements,
+            actions_input,
+            time_bound,
+        )

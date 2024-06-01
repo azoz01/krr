@@ -149,3 +149,36 @@ def realization_2_2():
     time_bound = 10
 
     return (observation_statements, actions_input, time_bound)
+
+
+@fixture(scope="session")
+def scenario_0():
+
+    adl_takes_statements = []
+
+    adl_causes_statements = [
+        AdlCausesStatement(
+            "LOAD", Fluent("loaded", False), [Fluent("g", False)]
+        ),
+        AdlCausesStatement(
+            "LOAD", Fluent("loaded", True), [Fluent("h", False)]
+        ),
+    ]
+
+    return (
+        adl_takes_statements,
+        adl_causes_statements,
+    )
+
+
+@fixture(scope="session")
+def realization_0_0():
+    observation_statements = [ObservationStatement(Fluent("loaded", False), 4)]
+
+    actions_input = [
+        ActionStatement("LOAD", 1),
+    ]
+
+    time_bound = 10
+
+    return (observation_statements, actions_input, time_bound)
