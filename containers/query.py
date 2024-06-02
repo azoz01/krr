@@ -133,7 +133,7 @@ class RealizableQueryBox(RelativeLayout):
                     observation_statements,
                     actions_input,
                     time_bound,
-                ):
+                )[0]:
                     response = "Yes"
                 else:
                     response = "No"
@@ -301,9 +301,9 @@ class ConditionQueryBox(RelativeLayout):
                     timepoint,
                     time_bound,
                 ):
-                    response = "No"
-                else:
                     response = "Yes"
+                else:
+                    response = "No"
                 self.response_label.text = response
             except ContradictiveLanguageException as e:
                 create_exception_popup(e)

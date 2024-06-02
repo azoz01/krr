@@ -19,7 +19,7 @@ def test_example_1_1(scenario_1, realization_1_1):
         observation_statements,
         actions_input,
         time_bound,
-    )
+    )[0]
 
     is_true_1 = resolve_condition_query(
         adl_takes_statements,
@@ -57,7 +57,7 @@ def test_example_1_2(scenario_1, realization_1_2):
         observation_statements,
         actions_input,
         time_bound,
-    )
+    )[0]
 
     assert not is_realizable
 
@@ -73,7 +73,7 @@ def test_example_1_3(scenario_1, realization_1_3):
         observation_statements,
         actions_input,
         time_bound,
-    )
+    )[0]
 
     assert not is_realizable
 
@@ -89,7 +89,7 @@ def test_example_1_4(scenario_1, realization_1_4):
         observation_statements,
         actions_input,
         time_bound,
-    )
+    )[0]
 
     assert not is_realizable
 
@@ -105,7 +105,7 @@ def test_example_2_1(scenario_2, realization_2_1):
         observation_statements,
         actions_input,
         time_bound,
-    )
+    )[0]
 
     is_true_1 = resolve_condition_query(
         adl_takes_statements,
@@ -155,7 +155,7 @@ def test_example_2_2(scenario_2, realization_2_2):
         observation_statements,
         actions_input,
         time_bound,
-    )
+    )[0]
 
     is_true_1 = resolve_condition_query(
         adl_takes_statements,

@@ -10,6 +10,7 @@ def get_actions_start_end_dict(
         adl_takes_statements: list[AdlTakesStatement],
         actions_input: list[ActionStatement]
 ) -> dict[int, int]:
+    # return the dict where each key is a start timepoint of new action and each value is an end timepoint
     actions_end_timepoints = {}
     for action in actions_input:
         action_from_adl = None
@@ -28,6 +29,7 @@ def get_actions_start_end_dict(
 def match_statements_for_action(takes_statements: list[AdlTakesStatement],
                                 causes_statements: list[AdlCausesStatement],
                                 action: ActionStatement) -> tuple[AdlTakesStatement, list[AdlCausesStatement]]:
+    # return an ADL 'TAKES' statement and a list of ADL 'CAUSES' statements corresponding to specific action
     takes_statement = None
     causes_statement = []
     for statement in takes_statements:
@@ -40,22 +42,28 @@ def match_statements_for_action(takes_statements: list[AdlTakesStatement],
 
 
 def change_fluents(current_fluents: list[Fluent], action_statements: list[AdlCausesStatement]) -> list[Fluent]:
+    # process fluents at current timepoint and list of ADL 'CAUSES' statements for the action that is to be performed,
+    # determine if the condition of any statements are met. If so, change the fluents according to the statement
     action_with_met_condition_statement = []
     for action_statement in action_statements:
-        #if action_with_met_condition_statement is not None:
-        #    break
         if len(action_statement.condition_fluents) == 0:
             action_with_met_condition_statement.append(action_statement)
         if len(action_statement.condition_fluents) == 1 and action_statement.condition_fluents[0].name == '':
             action_with_met_condition_statement.append(action_statement)
         else:
+            conditions_met_for_action = True
             for condition_fluent in action_statement.condition_fluents:
+                if not conditions_met_for_action:
+                    break
                 for fluent in current_fluents:
                     if fluent.name == condition_fluent.name:
                         if fluent.negated == condition_fluent.negated:
-                            action_with_met_condition_statement.append(action_statement)
+                            conditions_met_for_action = True
                         else:
+                            conditions_met_for_action = False
                             break
+            if conditions_met_for_action:
+                action_with_met_condition_statement.append(action_statement)
     if len(action_with_met_condition_statement) == 0:
         return current_fluents
     fluents_names_to_change = [action.fluent.name for action in action_with_met_condition_statement]
