@@ -24,6 +24,7 @@ General remarks:
     * To remove entry click the '-' icon which corresponds to this entry.
     * Provided times must be non-negative integers.
     * To provide negated fluent 'f' type 'not f'.
+    * both fluents and actions names should not contain whitespaces (e.g. " ").
     * A set of actions and fluents are extracted from ADL definition so there
         is no need to declare them explicitly.
 
