@@ -43,6 +43,16 @@ def resolve_realizable_query(
                             raise ContradictiveLanguageException(
                                 'Actions defined in Causes statements cannot contradict each other!'
                             )
+    # check if takes statements do not contradict
+    unique_actions_dict = {}
+    for action in adl_takes_statements:
+        if action.action not in list(unique_actions_dict.keys()):
+            unique_actions_dict[action.action] = action.time
+        else:
+            if action.time != unique_actions_dict.get(action.action):
+                raise ContradictiveLanguageException(
+                    'There cannot be two ADL TAKES statements for the same action with different times!'
+                )
     # create a takes statement with time 1 if no takes statement specified for action
     adl_takes_actions = [statement.action for statement in adl_takes_statements]
     for action in actions_input:
