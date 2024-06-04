@@ -1,5 +1,6 @@
 from itertools import product
 
+from containers.utils import ContradictiveLanguageException
 from query_resolution.dto import (
     ActionStatement,
     AdlCausesStatement,
@@ -13,7 +14,6 @@ from query_resolution.query_resolution_utils import (
     get_fluents_names_from_causes_statements,
     match_statements_for_action,
 )
-from containers.utils import ContradictiveLanguageException
 
 
 def resolve_realizable_query(
@@ -37,24 +37,35 @@ def resolve_realizable_query(
         for action_1 in adl_causes_statements:
             if action != action_1 and action.action == action_1.action:
                 fluent, fluent_1 = action.fluent, action_1.fluent
-                if fluent.name == fluent_1.name and fluent.negated != fluent_1.negated:
+                if (
+                    fluent.name == fluent_1.name
+                    and fluent.negated != fluent_1.negated
+                ):
                     for cond_fluent in action.condition_fluents:
-                        if cond_fluent.name not in [cond_fluent1.name for cond_fluent1 in action_1.condition_fluents]:
+                        if cond_fluent.name not in [
+                            cond_fluent1.name
+                            for cond_fluent1 in action_1.condition_fluents
+                        ]:
                             raise ContradictiveLanguageException(
-                                'Actions defined in Causes statements cannot contradict each other!'
+                                "Actions defined in Causes statements cannot contradict each other!"
                             )
     # create a takes statement with time 1 if no takes statement specified for action
-    adl_takes_actions = [statement.action for statement in adl_takes_statements]
+    adl_takes_actions = [
+        statement.action for statement in adl_takes_statements
+    ]
     for action in actions_input:
         if action.action not in adl_takes_actions:
             adl_takes_actions.append(action.action)
-            adl_takes_statements.append(AdlTakesStatement(action=action.action, time=1))
+            adl_takes_statements.append(
+                AdlTakesStatement(action=action.action, time=1)
+            )
     actions_start_end_timepoints = get_actions_start_end_dict(
         adl_takes_statements, actions_input
     )
     # check if all actions terminate before the termination timepoint:
-    if max(list(actions_start_end_timepoints.values())) > time_bound:
-        return False, []
+    if len(actions_start_end_timepoints) != 0:
+        if max(list(actions_start_end_timepoints.values())) > time_bound:
+            return False, []
     # check if any actions overlap:
     sorted_actions_timepoints = sorted(actions_start_end_timepoints.items())
     for i in range(len(sorted_actions_timepoints) - 1):
@@ -124,7 +135,7 @@ def resolve_condition_query(
         adl_causes_statements,
         observation_statements,
         actions_input,
-        time_bound
+        time_bound,
     )
     if not realizable:
         return False
