@@ -15,6 +15,7 @@ class GlobalValueHolder:
 
 
 HELP_TEXT = """
+It is advised to use application in maximized window.
 This is an application that answers queries corresponding to Action Description Language
 analogous to AL. It takes statements from action description language and scenario i.e.
 observations and actions.

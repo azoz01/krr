@@ -12,6 +12,9 @@ from .custom_components import ManagedTextInput
 
 class AdlTakesInputContainer(InputContainerBase):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(entry_height=0.075, *args, **kwargs)
+
     def get_header_label_text(self):
         return "ADL - A takes t"
 
@@ -22,7 +25,7 @@ class AdlTakesInputContainer(InputContainerBase):
             ManagedTextInput(
                 text="A",
                 multiline=False,
-                size_hint=(0.5, 0.1),
+                size_hint=(0.5, 0.075),
                 background_color=(0.84, 0.85, 0.78, 1),
                 pos_hint={"x": 0},
             )
@@ -31,7 +34,7 @@ class AdlTakesInputContainer(InputContainerBase):
             TimeInput(
                 text="t",
                 multiline=False,
-                size_hint=(0.5, 0.1),
+                size_hint=(0.5, 0.075),
                 background_color=(0.84, 0.85, 0.78, 1),
                 pos_hint={"x": 0.5},
             )
@@ -50,6 +53,9 @@ class AdlTakesInputContainer(InputContainerBase):
 
 class AdlCausesInputContainer(InputContainerBase):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(entry_height=0.075, *args, **kwargs)
+
     def get_header_label_text(self):
         return "ADL - A causes f if f1, f2, ..."
 
@@ -60,7 +66,7 @@ class AdlCausesInputContainer(InputContainerBase):
             ManagedTextInput(
                 text="A",
                 multiline=False,
-                size_hint=(0.25, 0.1),
+                size_hint=(0.25, 0.075),
                 background_color=(0.84, 0.85, 0.78, 1),
                 pos_hint={"x": 0},
             )
@@ -69,7 +75,7 @@ class AdlCausesInputContainer(InputContainerBase):
             ManagedTextInput(
                 text="f",
                 multiline=False,
-                size_hint=(0.25, 0.1),
+                size_hint=(0.25, 0.075),
                 background_color=(0.84, 0.85, 0.78, 1),
                 pos_hint={"x": 0.25},
             )
@@ -78,7 +84,7 @@ class AdlCausesInputContainer(InputContainerBase):
             ManagedTextInput(
                 text="f1, f2, ...",
                 multiline=False,
-                size_hint=(0.5, 0.1),
+                size_hint=(0.5, 0.075),
                 background_color=(0.84, 0.85, 0.78, 1),
                 pos_hint={"x": 0.5},
             )

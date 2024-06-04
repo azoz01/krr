@@ -43,7 +43,10 @@ class ManagedEntryButton(Button):
         self.font_size = default_font_size.val
 
     def delete(self):
-        self.cleanup_callback()
+        try:
+            self.cleanup_callback()
+        except Exception as e:
+            print(e)
         managed_fields.pop(managed_fields.index(self))
 
 
