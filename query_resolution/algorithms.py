@@ -1,5 +1,6 @@
 from itertools import product
 
+from containers.utils import ContradictiveLanguageException
 from query_resolution.dto import (
     ActionStatement,
     AdlCausesStatement,
@@ -155,7 +156,7 @@ def resolve_condition_query(
         adl_causes_statements,
         observation_statements,
         actions_input,
-        time_bound
+        time_bound,
     )
     if not realizable:
         return False
