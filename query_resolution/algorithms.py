@@ -17,11 +17,11 @@ from containers.utils import ContradictiveLanguageException
 
 
 def resolve_realizable_query(
-    adl_takes_statements: list[AdlTakesStatement],
-    adl_causes_statements: list[AdlCausesStatement],
-    observation_statements: list[ObservationStatement],
-    actions_input: list[ActionStatement],
-    time_bound: int,
+        adl_takes_statements: list[AdlTakesStatement],
+        adl_causes_statements: list[AdlCausesStatement],
+        observation_statements: list[ObservationStatement],
+        actions_input: list[ActionStatement],
+        time_bound: int,
 ) -> tuple[bool, list[list[Fluent]]]:
     """
     :param adl_takes_statements: list of ADL 'TAKES' statements
@@ -34,15 +34,28 @@ def resolve_realizable_query(
     """
     # check if causes statements do not contradict
     for action in adl_causes_statements:
+        for condition_fluent in action.condition_fluents:
+            for condition_fluent_1 in action.condition_fluents:
+                if condition_fluent != condition_fluent_1 and condition_fluent.name == condition_fluent_1.name \
+                        and condition_fluent.negated != condition_fluent_1.negated:
+                    raise ContradictiveLanguageException(
+                        'Actions defined in Causes statements cannot contradict each other!'
+                    )
         for action_1 in adl_causes_statements:
             if action != action_1 and action.action == action_1.action:
                 fluent, fluent_1 = action.fluent, action_1.fluent
                 if fluent.name == fluent_1.name and fluent.negated != fluent_1.negated:
-                    for cond_fluent in action.condition_fluents:
-                        if cond_fluent.name not in [cond_fluent1.name for cond_fluent1 in action_1.condition_fluents]:
-                            raise ContradictiveLanguageException(
-                                'Actions defined in Causes statements cannot contradict each other!'
-                            )
+                    contradicting_statements = True
+                    if len(action.condition_fluents) > 0 and len(action_1.condition_fluents) > 0:
+                        for cond_fluent in action.condition_fluents:
+                            for cond_fluent_1 in action_1.condition_fluents:
+                                if cond_fluent.name == cond_fluent_1.name and cond_fluent.negated != cond_fluent_1.negated:
+                                    contradicting_statements = False
+                    if contradicting_statements:
+                        raise ContradictiveLanguageException(
+                            'Actions defined in Causes statements cannot contradict each other!'
+                        )
+
     # check if takes statements do not contradict
     unique_actions_dict = {}
     for action in adl_takes_statements:
@@ -59,21 +72,21 @@ def resolve_realizable_query(
         if action.action not in adl_takes_actions:
             adl_takes_actions.append(action.action)
             adl_takes_statements.append(AdlTakesStatement(action=action.action, time=1))
-    actions_start_end_timepoints = get_actions_start_end_dict(
-        adl_takes_statements, actions_input
-    )
-    # check if all actions terminate before the termination timepoint:
-    if max(list(actions_start_end_timepoints.values())) > time_bound:
-        return False, []
-    # check if any actions overlap:
-    sorted_actions_timepoints = sorted(actions_start_end_timepoints.items())
-    for i in range(len(sorted_actions_timepoints) - 1):
-        if (
-            sorted_actions_timepoints[i][1]
-            > sorted_actions_timepoints[i + 1][0]
-        ):
+    if len(actions_input) > 0:
+        actions_start_end_timepoints = get_actions_start_end_dict(
+            adl_takes_statements, actions_input
+        )
+        # check if all actions terminate before the termination timepoint:
+        if max(list(actions_start_end_timepoints.values())) > time_bound:
             return False, []
-        # no inconsistencies can be found if no actions are passed as inputs
+        # check if any actions overlap:
+        sorted_actions_timepoints = sorted(actions_start_end_timepoints.items())
+        for i in range(len(sorted_actions_timepoints) - 1):
+            if (
+                    sorted_actions_timepoints[i][1]
+                    > sorted_actions_timepoints[i + 1][0]
+            ):
+                return False, []
     # get all possible initial states regarding the fluents from observations
     fluent_names = get_fluents_names_from_causes_statements(
         adl_causes_statements
@@ -91,14 +104,22 @@ def resolve_realizable_query(
         )
     if len(observation_statements) == 0:
         return True, possible_initial_fluents
+    # no inconsistencies can be found if no observations are passed as inputs
+    if len(actions_input) == 0:
+        for observation in observation_statements:
+            for observation_1 in observation_statements:
+                if observation != observation_1 and observation.fluent.name == observation_1.fluent.name and \
+                        observation.fluent.negated != observation_1.fluent.negated:
+                    return False, []
+        return True, possible_initial_fluents
     initial_fluents = []
     for element in possible_initial_fluents:
         if scenario_realizable_for_specific_model(
-            adl_takes_statements,
-            adl_causes_statements,
-            observation_statements,
-            actions_input,
-            element,
+                adl_takes_statements,
+                adl_causes_statements,
+                observation_statements,
+                actions_input,
+                element,
         ):
             initial_fluents.append(element)
     if len(initial_fluents) == 0:
@@ -108,13 +129,13 @@ def resolve_realizable_query(
 
 
 def resolve_condition_query(
-    adl_takes_statements: list[AdlTakesStatement],
-    adl_causes_statements: list[AdlCausesStatement],
-    observation_statements: list[ObservationStatement],
-    actions_input: list[ActionStatement],
-    fluents_list: list[Fluent],
-    timepoint: int,
-    time_bound: int,
+        adl_takes_statements: list[AdlTakesStatement],
+        adl_causes_statements: list[AdlCausesStatement],
+        observation_statements: list[ObservationStatement],
+        actions_input: list[ActionStatement],
+        fluents_list: list[Fluent],
+        timepoint: int,
+        time_bound: int,
 ) -> bool:
     """
     :param adl_takes_statements: list of ADL 'TAKES' statements
@@ -138,25 +159,35 @@ def resolve_condition_query(
     )
     if not realizable:
         return False
+    if len(actions_input) == 0:
+        if len(observation_statements) == 0:
+            return False
+        for fluent in fluents_list:
+            if fluent not in [observation.fluent for observation in observation_statements]:
+                return False
+            for observation in observation_statements:
+                if fluent.name == observation.fluent.name and fluent.negated != observation.fluent.negated:
+                    return False
+        return True
     for element in possible_initial_fluents:
         if not conditions_met_for_specific_model(
-            adl_takes_statements,
-            adl_causes_statements,
-            actions_input,
-            element,
-            fluents_list,
-            timepoint,
+                adl_takes_statements,
+                adl_causes_statements,
+                actions_input,
+                element,
+                fluents_list,
+                timepoint,
         ):
             return False
     return True
 
 
 def scenario_realizable_for_specific_model(
-    adl_takes_statements: list[AdlTakesStatement],
-    adl_causes_statements: list[AdlCausesStatement],
-    observation_statements: list[ObservationStatement],
-    actions_input: list[ActionStatement],
-    initial_fluents: list[Fluent],
+        adl_takes_statements: list[AdlTakesStatement],
+        adl_causes_statements: list[AdlCausesStatement],
+        observation_statements: list[ObservationStatement],
+        actions_input: list[ActionStatement],
+        initial_fluents: list[Fluent],
 ) -> bool:
     """
     :param adl_takes_statements: list of ADL 'TAKES' statements
@@ -179,8 +210,8 @@ def scenario_realizable_for_specific_model(
         for observation in observation_statements:
             for causes_statement in causes_statements:
                 if (
-                    current_timepoint < observation.time < next_timepoint
-                    and observation.fluent == causes_statement.fluent
+                        current_timepoint < observation.time < next_timepoint
+                        and observation.fluent == causes_statement.fluent
                 ):
                     return False
         current_timepoint = next_timepoint
@@ -195,12 +226,12 @@ def scenario_realizable_for_specific_model(
 
 
 def conditions_met_for_specific_model(
-    adl_takes_statements: list[AdlTakesStatement],
-    adl_causes_statements: list[AdlCausesStatement],
-    actions_input: list[ActionStatement],
-    initial_fluents: list[Fluent],
-    condition_fluents: list[Fluent],
-    timepoint: int,
+        adl_takes_statements: list[AdlTakesStatement],
+        adl_causes_statements: list[AdlCausesStatement],
+        actions_input: list[ActionStatement],
+        initial_fluents: list[Fluent],
+        condition_fluents: list[Fluent],
+        timepoint: int,
 ) -> bool:
     """
     :param adl_takes_statements: list of ADL 'TAKES' statements
@@ -230,8 +261,8 @@ def conditions_met_for_specific_model(
         for fluent in condition_fluents:
             for causes_statement in causes_statements:
                 if (
-                    current_timepoint < timepoint < next_timepoint
-                    and fluent.name == causes_statement.fluent.name
+                        current_timepoint < timepoint < next_timepoint
+                        and fluent.name == causes_statement.fluent.name
                 ):
                     return False
         current_timepoint = next_timepoint
